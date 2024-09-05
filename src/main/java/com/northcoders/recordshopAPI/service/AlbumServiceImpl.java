@@ -24,16 +24,27 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     public String saveAlbum(Album album) {
-        return "";
+        try {
+            albumRepository.save(album);
+            return album.getTitle() + " successfully added";
+        } catch (Exception e) {
+            throw new NullPointerException("failed");
+        }
     }
 
     @Override
     public Album getAlbumById(Long id) {
-        return null;
+        return albumRepository.findById(id)
+                .orElseThrow(NullPointerException::new);
     }
 
     @Override
     public String deleteAlbumById(Long id) {
-        return "";
+        try {
+            albumRepository.deleteById(id);
+            return "successfully deleted";
+        } catch (Exception e) {
+            throw new NullPointerException("failed");
+        }
     }
 }
