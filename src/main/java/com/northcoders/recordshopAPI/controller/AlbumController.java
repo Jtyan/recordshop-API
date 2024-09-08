@@ -17,8 +17,14 @@ public class AlbumController {
     AlbumService albumService;
 
     @GetMapping("/album")
-    public ResponseEntity<List<AlbumModel>> getAllAlbums() {
-        List<AlbumModel> albums = albumService.getAllAlbums();
+    public ResponseEntity<List<AlbumModel>> getAllAlbums(@RequestParam(value = "inStock", required = false) Boolean inStock) {
+        List<AlbumModel> albums;
+
+        if (inStock != null && inStock) {
+            albums = albumService.getAllAlbumsInStock();
+        } else {
+            albums = albumService.getAllAlbums();
+        }
         return new ResponseEntity<>(albums, HttpStatus.OK);
     }
 
@@ -45,8 +51,11 @@ public class AlbumController {
         return new ResponseEntity<>(album, HttpStatus.OK);
     }
 
-//    @GetMapping(value = "/album", params = "genre")
-//    @ResponseBody
+    @GetMapping(value = "/album", params = "genre")
+    public ResponseEntity<List<AlbumModel>> getAlbumsByGenre(@RequestParam("genre") String genre) {
+        List<AlbumModel> albums = albumService.getAllAlbumsByGenre(genre);
+        return new ResponseEntity<>(albums, HttpStatus.OK);
+    }
 
     @PostMapping("/album")
     public ResponseEntity<AlbumModel> addAlbum(@RequestBody AlbumModel album) {
