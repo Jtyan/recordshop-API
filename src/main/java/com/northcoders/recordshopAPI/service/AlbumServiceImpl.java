@@ -32,7 +32,7 @@ public class AlbumServiceImpl implements AlbumService {
     public List<AlbumModel> getAllAlbumsInStock() {
         List<AlbumModel> albumList = new ArrayList<>();
         albumRepository.findAll().forEach(album -> {
-            if (album.getStock() > 0) {
+            if (album.getStock() != null && album.getStock() > 0) {
                 albumList.add(album);
             }
         });
