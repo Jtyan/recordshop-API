@@ -17,14 +17,14 @@ public class AlbumController {
     AlbumService albumService;
 
     @GetMapping("/album")
-    public ResponseEntity<List<AlbumModel>> getAllAlbums(@RequestParam(value = "inStock", required = false) Boolean inStock) {
-        List<AlbumModel> albums;
+    public ResponseEntity<List<AlbumModel>> getAllAlbums() {
+        List<AlbumModel> albums = albumService.getAllAlbums();
+        return new ResponseEntity<>(albums, HttpStatus.OK);
+    }
 
-        if (inStock != null && inStock) {
-            albums = albumService.getAllAlbumsInStock();
-        } else {
-            albums = albumService.getAllAlbums();
-        }
+    @GetMapping(value = "/album", params = "inStock=true")
+    public ResponseEntity<List<AlbumModel>> getAllAlbumsInStock(@RequestParam("inStock") Boolean inStock) {
+        List<AlbumModel> albums = albumService.getAllAlbumsInStock();
         return new ResponseEntity<>(albums, HttpStatus.OK);
     }
 
