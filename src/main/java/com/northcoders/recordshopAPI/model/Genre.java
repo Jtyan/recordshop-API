@@ -5,7 +5,7 @@ public enum Genre {
     POP,
     CLASSICAL,
     ROCK,
-    BLUES,
+    ELECTRONIC,
     FOLK,
     JAZZ,
     COUNTRY

@@ -23,9 +23,10 @@ public class AlbumModel {
     private String artist;
     @Column
     private Integer releasedYear;
-
     @Column(name = "genre")
     @Enumerated(EnumType.STRING)
     private Genre genre;
+    @Column
+    private Integer stock;
 
 }
