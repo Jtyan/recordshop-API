@@ -1,18 +1,28 @@
 package com.northcoders.recordshopAPI.service;
 
-import com.northcoders.recordshopAPI.model.Album;
+import com.northcoders.recordshopAPI.model.AlbumModel;
 
 import java.util.List;
 
 public interface AlbumService {
 
 
-    public List<Album> getAllAlbums();
+    public List<AlbumModel> getAllAlbums();
 
-    public String saveAlbum(Album album);
+    public AlbumModel saveAlbum(AlbumModel album);
 
-    public Album getAlbumById(Long id);
+    public AlbumModel getAlbumById(Long id);
 
     public String deleteAlbumById(Long id);
+
+    public List<AlbumModel> getAllAlbumsByArtist(String Artist);
+
+    public List<AlbumModel> getAllAlbumsByReleasedYear(Integer year);
+
+    public AlbumModel getAlbumByTitle(String title);
+
+    public AlbumModel updateAlbum(Long id, AlbumModel album);
+
+    public AlbumModel partiallyUpdateAlbum(Long id, AlbumModel album);
 }
 
