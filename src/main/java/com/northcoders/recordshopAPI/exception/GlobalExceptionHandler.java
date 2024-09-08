@@ -18,4 +18,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    public ResponseEntity<Object> handleRuntimeException(RuntimeException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
