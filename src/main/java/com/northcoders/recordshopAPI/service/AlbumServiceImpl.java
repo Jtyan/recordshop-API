@@ -3,6 +3,7 @@ package com.northcoders.recordshopAPI.service;
 import com.northcoders.recordshopAPI.exception.AlbumAlreadyExistsException;
 import com.northcoders.recordshopAPI.exception.AlbumNotFoundException;
 import com.northcoders.recordshopAPI.model.AlbumModel;
+import com.northcoders.recordshopAPI.model.Genre;
 import com.northcoders.recordshopAPI.repository.AlbumRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,17 @@ public class AlbumServiceImpl implements AlbumService {
     public List<AlbumModel> getAllAlbums() {
         List<AlbumModel> albumList = new ArrayList<>();
         albumRepository.findAll().forEach(albumList::add);
+        return albumList;
+    }
+
+    @Override
+    public List<AlbumModel> getAllAlbumsInStock() {
+        List<AlbumModel> albumList = new ArrayList<>();
+        albumRepository.findAll().forEach(album -> {
+            if (album.getStock() > 0) {
+                albumList.add(album);
+            }
+        });
         return albumList;
     }
 
@@ -75,6 +87,12 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
+    public List<AlbumModel> getAllAlbumsByGenre(String genre) {
+        log.info("Fetching album by genre: {}", genre);
+        return albumRepository.findByGenre(Genre.valueOf(genre));
+    }
+
+    @Override
     public AlbumModel updateAlbum(Long id, AlbumModel album) {
         album.setId(id);
         return albumRepository.save(album);
@@ -108,6 +126,5 @@ public class AlbumServiceImpl implements AlbumService {
             throw new AlbumNotFoundException("Album with ID " + id + " not found");
         }
     }
-
 
 }
