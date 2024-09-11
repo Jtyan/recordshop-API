@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface AlbumRepository extends CrudRepository<AlbumModel, Long> {
+    List<AlbumModel> findAllByOrderByIdAsc();
     AlbumModel findByTitle(String title);
     List<AlbumModel> findByArtist(String artist);
     List<AlbumModel> findByGenre(Genre genre);

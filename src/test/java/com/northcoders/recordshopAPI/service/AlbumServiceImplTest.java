@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.ArrayList;
@@ -26,6 +25,9 @@ class AlbumServiceImplTest {
 
     @Mock
     private AlbumRepository mockAlbumRepository;
+
+    @Mock
+    private GenericCacheService mockCacheService;
 
     @InjectMocks
     private AlbumServiceImpl albumService;
@@ -48,7 +50,7 @@ class AlbumServiceImplTest {
     @DisplayName("return correct number of albums when given list of albums")
     void testGetAllAlbums() {
 
-        when(mockAlbumRepository.findAll()).thenReturn(mockAlbumList);
+        when(mockAlbumRepository.findAllByOrderByIdAsc()).thenReturn(mockAlbumList);
 
         List<AlbumModel> albums = albumService.getAllAlbums();
         assertEquals(8, albums.size());
@@ -58,7 +60,7 @@ class AlbumServiceImplTest {
     @DisplayName("return correct number of albums in stock when given list of albums")
     void testGetAllAlbumsInStock() {
 
-        when(mockAlbumRepository.findAll()).thenReturn(mockAlbumList);
+        when(mockAlbumRepository.findAllByOrderByIdAsc()).thenReturn(mockAlbumList);
 
         List<AlbumModel> albums = albumService.getAllAlbumsInStock();
         assertEquals(5, albums.size());
