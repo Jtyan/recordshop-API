@@ -23,15 +23,13 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     public List<AlbumModel> getAllAlbums() {
-        List<AlbumModel> albumList = new ArrayList<>();
-        albumRepository.findAll().forEach(albumList::add);
-        return albumList;
+        return new ArrayList<>(albumRepository.findAllByOrderByIdAsc());
     }
 
     @Override
     public List<AlbumModel> getAllAlbumsInStock() {
         List<AlbumModel> albumList = new ArrayList<>();
-        albumRepository.findAll().forEach(album -> {
+        albumRepository.findAllByOrderByIdAsc().forEach(album -> {
             if (album.getStock() != null && album.getStock() > 0) {
                 albumList.add(album);
             }
