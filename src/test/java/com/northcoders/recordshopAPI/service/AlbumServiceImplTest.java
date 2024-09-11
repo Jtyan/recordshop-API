@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.ArrayList;
@@ -26,6 +25,9 @@ class AlbumServiceImplTest {
 
     @Mock
     private AlbumRepository mockAlbumRepository;
+
+    @Mock
+    private GenericCacheService mockCacheService;
 
     @InjectMocks
     private AlbumServiceImpl albumService;

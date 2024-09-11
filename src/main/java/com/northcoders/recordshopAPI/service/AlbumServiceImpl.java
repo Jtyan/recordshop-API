@@ -7,23 +7,34 @@ import com.northcoders.recordshopAPI.model.Genre;
 import com.northcoders.recordshopAPI.repository.AlbumRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 public class AlbumServiceImpl implements AlbumService {
 
     @Autowired
-    AlbumRepository albumRepository;
+    private final AlbumRepository albumRepository;
+    private final GenericCacheService cacheService;
+
+    public AlbumServiceImpl(AlbumRepository albumRepository, GenericCacheService cacheService) {
+        this.albumRepository = albumRepository;
+        this.cacheService = cacheService;
+    }
 
     @Override
     public List<AlbumModel> getAllAlbums() {
-        return new ArrayList<>(albumRepository.findAllByOrderByIdAsc());
+        List<AlbumModel> albumList = new ArrayList<>();
+        albumRepository.findAllByOrderByIdAsc().forEach(albumList::add);
+        return albumList;
     }
 
     @Override
@@ -42,6 +53,8 @@ public class AlbumServiceImpl implements AlbumService {
         try {
             AlbumModel savedAlbum = albumRepository.save(album);
             log.info("{} successfully added", savedAlbum.getTitle());
+
+            cacheService.evictCacheValue("allAlbums", "all");
             return savedAlbum;
         } catch (DataIntegrityViolationException e) {
             throw new AlbumAlreadyExistsException("Album already exists!");
@@ -50,76 +63,89 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     public AlbumModel getAlbumById(Long id) {
-        return albumRepository.findById(id)
-                .orElseThrow(() -> new AlbumNotFoundException("Album with ID = " + id + " not found"));
+        log.info("Fetching album with id: {}", id);
+        return cacheService.getCachedValue("albums", id, TimeUnit.SECONDS.toMillis(60),
+                () -> {
+                    System.out.println("Fetching from database...");
+                    return albumRepository.findById(id)
+                            .orElseThrow(() -> new AlbumNotFoundException("Album with ID = " + id + " not found"));
+                });
     }
 
     @Override
     public String deleteAlbumById(Long id) {
         log.info("Deleting album with ID = {}", id);
-        AlbumModel existingAlbum = albumRepository.findById(id)
-                .orElse(null);
-        if (existingAlbum != null) {
-            albumRepository.deleteById(id);
-            return "Album successfully deleted";
-        } else {
-            throw new AlbumNotFoundException("Album with ID = " + id + " not found");
-        }
+        albumRepository.findById(id)
+                .orElseThrow(() -> new AlbumNotFoundException("Album with ID = " + id + " not found"));
+        albumRepository.deleteById(id);
+        cacheService.evictCacheValue("albums", id);
+        return "Album successfully deleted";
     }
 
     @Override
     public List<AlbumModel> getAllAlbumsByArtist(String artist) {
-        return albumRepository.findByArtist(artist);
+        log.info("Fetching albums by artist: {}", artist);
+        return cacheService.getCachedValue("albumsByArtist", artist, TimeUnit.SECONDS.toMillis(60),
+                () -> albumRepository.findByArtist(artist));
     }
 
     @Override
+    @Cacheable("albumsByYear")
     public List<AlbumModel> getAllAlbumsByReleasedYear(Integer year) {
         log.info("Fetching albums released in year: {}", year);
-        return albumRepository.findByReleasedYear(year);
+        return cacheService.getCachedValue("albumsByYear", year, TimeUnit.SECONDS.toMillis(60),
+                () -> albumRepository.findByReleasedYear(year));
     }
 
     @Override
     public AlbumModel getAlbumByTitle(String title) {
         log.info("Fetching album by title: {}", title);
-        return albumRepository.findByTitle(title);
+        return cacheService.getCachedValue("albumsByTitle", title, TimeUnit.SECONDS.toMillis(60),
+                () -> albumRepository.findByTitle(title));
     }
 
     @Override
     public List<AlbumModel> getAllAlbumsByGenre(String genre) {
         log.info("Fetching album by genre: {}", genre);
-        return albumRepository.findByGenre(Genre.valueOf(genre));
+        return cacheService.getCachedValue("albumsByGenre", genre, TimeUnit.SECONDS.toMillis(60),
+                () -> albumRepository.findByGenre(Genre.valueOf(genre)));
     }
 
     @Override
     public AlbumModel updateAlbum(Long id, AlbumModel album) {
         album.setId(id);
-        return albumRepository.save(album);
+        AlbumModel updatedAlbum = albumRepository.save(album);
+        cacheService.evictCacheValue("album", id);
+        return updatedAlbum;
     }
 
     @Override
-    public AlbumModel partiallyUpdateAlbum(Long id, AlbumModel updatedAlbum) {
+    @CachePut("albums")
+    public AlbumModel partiallyUpdateAlbum(Long id, AlbumModel newAlbum) {
         Optional<AlbumModel> existingAlbumOpt = albumRepository.findById(id);
 
         if (existingAlbumOpt.isPresent()) {
             AlbumModel existingAlbum = existingAlbumOpt.get();
 
-            if (updatedAlbum.getTitle() != null) {
-                existingAlbum.setTitle(updatedAlbum.getTitle());
+            if (newAlbum.getTitle() != null) {
+                existingAlbum.setTitle(newAlbum.getTitle());
             }
-            if (updatedAlbum.getArtist() != null) {
-                existingAlbum.setArtist(updatedAlbum.getArtist());
+            if (newAlbum.getArtist() != null) {
+                existingAlbum.setArtist(newAlbum.getArtist());
             }
-            if (updatedAlbum.getReleasedYear() != null) {
-                existingAlbum.setReleasedYear(updatedAlbum.getReleasedYear());
+            if (newAlbum.getReleasedYear() != null) {
+                existingAlbum.setReleasedYear(newAlbum.getReleasedYear());
             }
-            if (updatedAlbum.getGenre() != null) {
-                existingAlbum.setGenre(updatedAlbum.getGenre());
+            if (newAlbum.getGenre() != null) {
+                existingAlbum.setGenre(newAlbum.getGenre());
             }
-            if (updatedAlbum.getStock() != null) {
-                existingAlbum.setStock(updatedAlbum.getStock());
+            if (newAlbum.getStock() != null) {
+                existingAlbum.setStock(newAlbum.getStock());
             }
 
-            return albumRepository.save(existingAlbum);
+            AlbumModel updatedAlbum = albumRepository.save(existingAlbum);
+            cacheService.evictCacheValue("albums", id);
+            return updatedAlbum;
         } else {
             throw new AlbumNotFoundException("Album with ID " + id + " not found");
         }

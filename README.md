@@ -3,6 +3,8 @@
 ## How to run locally
 
 ### With Maven CLI
+Please make sure you have maven installed before running
+
  Type in Terminal
 ```
   mvn spring-boot:run
@@ -25,8 +27,6 @@
 - use PUT */api/v1/album/{id}* to update specific album's details
 #### DELETE
 - use DELETE */api/v1/album/{id}* to delete specific album
-
-
 
 ## Running test
 todo
