@@ -25,5 +25,7 @@ public class AlbumModel {
     private Genre genre;
     @Column
     private Integer stock;
+//    @Column
+//    private String AlbumCoverURL;
 
 }

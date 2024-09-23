@@ -33,14 +33,14 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public List<AlbumModel> getAllAlbums() {
         List<AlbumModel> albumList = new ArrayList<>();
-        albumRepository.findAllByOrderByIdAsc().forEach(albumList::add);
+        albumRepository.findAllByOrderByIdDesc().forEach(albumList::add);
         return albumList;
     }
 
     @Override
     public List<AlbumModel> getAllAlbumsInStock() {
         List<AlbumModel> albumList = new ArrayList<>();
-        albumRepository.findAllByOrderByIdAsc().forEach(album -> {
+        albumRepository.findAllByOrderByIdDesc().forEach(album -> {
             if (album.getStock() != null && album.getStock() > 0) {
                 albumList.add(album);
             }
@@ -51,6 +51,8 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public AlbumModel saveAlbum(AlbumModel album) {
         try {
+            // call apple api and get image urls
+            // albumcoverurl =
             AlbumModel savedAlbum = albumRepository.save(album);
             log.info("{} successfully added", savedAlbum.getTitle());
 
@@ -64,7 +66,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public AlbumModel getAlbumById(Long id) {
         log.info("Fetching album with id: {}", id);
-        return cacheService.getCachedValue("albums", id, TimeUnit.SECONDS.toMillis(60),
+        return cacheService.getCachedValue("albums", id, TimeUnit.SECONDS.toMillis(30),
                 () -> {
                     System.out.println("Fetching from database...");
                     return albumRepository.findById(id)
@@ -85,7 +87,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public List<AlbumModel> getAllAlbumsByArtist(String artist) {
         log.info("Fetching albums by artist: {}", artist);
-        return cacheService.getCachedValue("albumsByArtist", artist, TimeUnit.SECONDS.toMillis(60),
+        return cacheService.getCachedValue("albumsByArtist", artist, TimeUnit.SECONDS.toMillis(30),
                 () -> albumRepository.findByArtist(artist));
     }
 
@@ -93,21 +95,21 @@ public class AlbumServiceImpl implements AlbumService {
     @Cacheable("albumsByYear")
     public List<AlbumModel> getAllAlbumsByReleasedYear(Integer year) {
         log.info("Fetching albums released in year: {}", year);
-        return cacheService.getCachedValue("albumsByYear", year, TimeUnit.SECONDS.toMillis(60),
+        return cacheService.getCachedValue("albumsByYear", year, TimeUnit.SECONDS.toMillis(30),
                 () -> albumRepository.findByReleasedYear(year));
     }
 
     @Override
     public AlbumModel getAlbumByTitle(String title) {
         log.info("Fetching album by title: {}", title);
-        return cacheService.getCachedValue("albumsByTitle", title, TimeUnit.SECONDS.toMillis(60),
+        return cacheService.getCachedValue("albumsByTitle", title, TimeUnit.SECONDS.toMillis(30),
                 () -> albumRepository.findByTitle(title));
     }
 
     @Override
     public List<AlbumModel> getAllAlbumsByGenre(String genre) {
         log.info("Fetching album by genre: {}", genre);
-        return cacheService.getCachedValue("albumsByGenre", genre, TimeUnit.SECONDS.toMillis(60),
+        return cacheService.getCachedValue("albumsByGenre", genre, TimeUnit.SECONDS.toMillis(30),
                 () -> albumRepository.findByGenre(Genre.valueOf(genre)));
     }
 

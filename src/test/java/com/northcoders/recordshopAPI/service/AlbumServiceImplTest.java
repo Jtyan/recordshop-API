@@ -50,7 +50,7 @@ class AlbumServiceImplTest {
     @DisplayName("return correct number of albums when given list of albums")
     void testGetAllAlbums() {
 
-        when(mockAlbumRepository.findAllByOrderByIdAsc()).thenReturn(mockAlbumList);
+        when(mockAlbumRepository.findAllByOrderByIdDesc()).thenReturn(mockAlbumList);
 
         List<AlbumModel> albums = albumService.getAllAlbums();
         assertEquals(8, albums.size());
@@ -60,7 +60,7 @@ class AlbumServiceImplTest {
     @DisplayName("return correct number of albums in stock when given list of albums")
     void testGetAllAlbumsInStock() {
 
-        when(mockAlbumRepository.findAllByOrderByIdAsc()).thenReturn(mockAlbumList);
+        when(mockAlbumRepository.findAllByOrderByIdDesc()).thenReturn(mockAlbumList);
 
         List<AlbumModel> albums = albumService.getAllAlbumsInStock();
         assertEquals(5, albums.size());
