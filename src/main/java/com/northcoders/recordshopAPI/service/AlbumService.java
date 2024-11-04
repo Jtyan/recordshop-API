@@ -2,6 +2,7 @@ package com.northcoders.recordshopAPI.service;
 
 import com.northcoders.recordshopAPI.model.AlbumModel;
 import com.northcoders.recordshopAPI.model.Genre;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public interface AlbumService {
 
     List<AlbumModel> getAllAlbumsInStock();
 
-    AlbumModel saveAlbum(AlbumModel album);
+    Mono<AlbumModel> saveAlbum(AlbumModel album);
 
     AlbumModel getAlbumById(Long id);
 
@@ -24,7 +25,7 @@ public interface AlbumService {
 
     AlbumModel getAlbumByTitle(String title);
 
-    AlbumModel updateAlbum(Long id, AlbumModel album);
+    Mono<AlbumModel> updateAlbum(Long id, AlbumModel album);
 
     AlbumModel partiallyUpdateAlbum(Long id, AlbumModel album);
 

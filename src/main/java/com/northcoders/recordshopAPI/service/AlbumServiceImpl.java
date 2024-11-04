@@ -1,5 +1,8 @@
 package com.northcoders.recordshopAPI.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.northcoders.recordshopAPI.exception.AlbumAlreadyExistsException;
 import com.northcoders.recordshopAPI.exception.AlbumNotFoundException;
 import com.northcoders.recordshopAPI.model.AlbumModel;
@@ -11,6 +14,8 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,18 +54,19 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
-    public AlbumModel saveAlbum(AlbumModel album) {
-        try {
-            // call apple api and get image urls
-            // albumcoverurl =
-            AlbumModel savedAlbum = albumRepository.save(album);
-            log.info("{} successfully added", savedAlbum.getTitle());
-
-            cacheService.evictCacheValue("allAlbums", "all");
-            return savedAlbum;
-        } catch (DataIntegrityViolationException e) {
-            throw new AlbumAlreadyExistsException("Album already exists!");
-        }
+    public Mono<AlbumModel> saveAlbum(AlbumModel album) {
+        return fetchAlbumCoverURL(album.getTitle(), album.getArtist())
+                .defaultIfEmpty("") // Optionally provide a default URL if not found
+                .flatMap(albumCoverURL -> {
+                    album.setAlbumCoverURL(albumCoverURL);
+                    return Mono.fromCallable(() -> albumRepository.save(album))
+                            .doOnSuccess(savedAlbum -> {
+                                log.info("{} successfully added", savedAlbum.getTitle());
+                                cacheService.evictCacheValue("allAlbums", "all");
+                            });
+                })
+                .onErrorMap(DataIntegrityViolationException.class,
+                        ex -> new AlbumAlreadyExistsException("Album already exists!"));
     }
 
     @Override
@@ -114,11 +120,26 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
-    public AlbumModel updateAlbum(Long id, AlbumModel album) {
-        album.setId(id);
-        AlbumModel updatedAlbum = albumRepository.save(album);
-        cacheService.evictCacheValue("album", id);
-        return updatedAlbum;
+    public Mono<AlbumModel> updateAlbum(Long id, AlbumModel album) {
+        String title = album.getTitle();
+        String artist = album.getArtist();
+
+        if (title == null || artist == null) {
+            throw new AlbumNotFoundException("Album with ID = " + id + " not found");
+        }
+        return fetchAlbumCoverURL(title, artist)
+                .defaultIfEmpty("") // Optionally provide a default URL if not found
+                .flatMap(albumCoverURL -> {
+                    album.setId(id);
+                    album.setAlbumCoverURL(albumCoverURL);
+                    return Mono.fromCallable(() -> albumRepository.save(album))
+                            .doOnSuccess(savedAlbum -> {
+                                log.info("{} successfully added", savedAlbum.getTitle());
+                                cacheService.evictCacheValue("album", id);
+                            });
+                })
+                .onErrorMap(DataIntegrityViolationException.class,
+                        ex -> new AlbumAlreadyExistsException("Album already exists!"));
     }
 
     @Override
@@ -153,4 +174,32 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
+    private Mono<String> fetchAlbumCoverURL(String title, String artist) {
+        String url = "https://itunes.apple.com/search?term=" + title + "+" + artist + "&entity=album";
+        WebClient webClient = WebClient.create();
+
+            return webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .flatMap(jsonResponse -> {
+                        try {
+                            ObjectMapper mapper = new ObjectMapper();
+                            JsonNode rootNode = mapper.readTree(jsonResponse);
+                            JsonNode resultsNode = rootNode.path("results");
+
+                            if (resultsNode.isArray() && resultsNode.size() > 0) {
+                                JsonNode firstResult = resultsNode.get(0); // Take the first result
+                                String artworkUrl = firstResult.path("artworkUrl100").asText(); // or "artworkUrl600" for higher resolution
+                                return Mono.just(artworkUrl);
+                            } else {
+                                return Mono.empty(); // No results found
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to parse album cover URL from iTunes API response", e);
+                            return Mono.empty();
+                        }
+                    });
+
+        }
 }

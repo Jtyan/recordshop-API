@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -58,14 +59,14 @@ public class AlbumController {
     }
 
     @PostMapping("/album")
-    public ResponseEntity<AlbumModel> addAlbum(@RequestBody AlbumModel album) {
-        AlbumModel newAlbum = albumService.saveAlbum(album);
+    public ResponseEntity<Mono<AlbumModel>> addAlbum(@RequestBody AlbumModel album) {
+        Mono<AlbumModel> newAlbum = albumService.saveAlbum(album);
         return new ResponseEntity<>(newAlbum, HttpStatus.CREATED);
     }
 
     @PutMapping("/album/{id}")
-    public ResponseEntity<AlbumModel> updateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
-        AlbumModel updatedAlbum = albumService.updateAlbum(id, album);
+    public ResponseEntity<Mono<AlbumModel>> updateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
+        Mono<AlbumModel> updatedAlbum = albumService.updateAlbum(id, album);
         return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
     }
 
