@@ -27,7 +27,7 @@ public interface AlbumService {
 
     Mono<AlbumModel> updateAlbum(Long id, AlbumModel album);
 
-    AlbumModel partiallyUpdateAlbum(Long id, AlbumModel album);
+    Mono<AlbumModel> partiallyUpdateAlbum(Long id, AlbumModel album);
 
     List<AlbumModel> getAllAlbumsByGenre(String genre);
 }

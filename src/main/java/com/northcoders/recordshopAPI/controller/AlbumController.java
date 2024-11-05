@@ -71,8 +71,8 @@ public class AlbumController {
     }
 
     @PatchMapping("/album/{id}")
-    public ResponseEntity<AlbumModel> partiallyUpdateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
-        AlbumModel updatedAlbum = albumService.partiallyUpdateAlbum(id, album);
+    public ResponseEntity<Mono<AlbumModel>> partiallyUpdateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
+        Mono<AlbumModel> updatedAlbum = albumService.partiallyUpdateAlbum(id, album);
         return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
     }
 
