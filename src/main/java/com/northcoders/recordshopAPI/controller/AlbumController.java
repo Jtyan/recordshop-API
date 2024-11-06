@@ -59,9 +59,9 @@ public class AlbumController {
     }
 
     @PostMapping("/album")
-    public ResponseEntity<Mono<AlbumModel>> addAlbum(@RequestBody AlbumModel album) {
-        Mono<AlbumModel> newAlbum = albumService.saveAlbum(album);
-        return new ResponseEntity<>(newAlbum, HttpStatus.CREATED);
+    public Mono<ResponseEntity<AlbumModel>> addAlbum(@RequestBody AlbumModel album) {
+        return albumService.saveAlbum(album)
+                .map(savedAlbum -> ResponseEntity.status(HttpStatus.CREATED).body(savedAlbum));
     }
 
     @PutMapping("/album/{id}")
