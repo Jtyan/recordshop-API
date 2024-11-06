@@ -136,7 +136,7 @@ public class AlbumServiceImpl implements AlbumService {
                     album.setAlbumCoverURL(albumCoverURL);
                     return Mono.fromCallable(() -> albumRepository.save(album))
                             .doOnSuccess(savedAlbum -> {
-                                log.info("{} successfully added", savedAlbum.getTitle());
+                                log.info("{} successfully updated ", savedAlbum.getTitle());
                                 cacheService.evictCacheValue("album", id);
                             });
                 })
@@ -174,7 +174,7 @@ public class AlbumServiceImpl implements AlbumService {
                         existingAlbum.setAlbumCoverURL(albumCoverURL);
                         return Mono.fromCallable(() -> albumRepository.save(existingAlbum))
                                 .doOnSuccess(savedAlbum -> {
-                                    log.info("{} successfully added", savedAlbum.getTitle());
+                                    log.info("{} successfully updated ", savedAlbum.getTitle());
                                     cacheService.evictCacheValue("album", id);
                                 })
                                 .onErrorMap(DataIntegrityViolationException.class,
