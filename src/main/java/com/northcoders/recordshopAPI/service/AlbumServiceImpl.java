@@ -38,7 +38,11 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public List<AlbumModel> getAllAlbums() {
         List<AlbumModel> albumList = new ArrayList<>();
-        albumRepository.findAllByOrderByIdDesc().forEach(albumList::add);
+        try {
+            albumRepository.findAllByOrderByIdDesc().forEach(albumList::add);
+        }catch (RuntimeException e){
+            throw new RuntimeException("Failed to retrieve albums list", e);
+        }
         return albumList;
     }
 
