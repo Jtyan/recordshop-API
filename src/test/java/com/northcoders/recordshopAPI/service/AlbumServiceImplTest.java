@@ -1,6 +1,6 @@
 package com.northcoders.recordshopAPI.service;
 
-import com.northcoders.recordshopAPI.exception.AlbumAlreadyExistsException;
+import com.northcoders.recordshopAPI.exception.ConflictException;
 import com.northcoders.recordshopAPI.model.AlbumModel;
 import com.northcoders.recordshopAPI.model.Genre;
 import com.northcoders.recordshopAPI.repository.AlbumRepository;
@@ -93,7 +93,7 @@ class AlbumServiceImplTest {
 
         when(mockAlbumRepository.save(mockAlbum)).thenThrow(DataIntegrityViolationException.class);
 
-        assertThrows(AlbumAlreadyExistsException.class, () -> albumService.saveAlbum(mockAlbum));
+        assertThrows(ConflictException.class, () -> albumService.saveAlbum(mockAlbum));
     }
 
 }

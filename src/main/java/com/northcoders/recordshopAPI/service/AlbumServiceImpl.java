@@ -2,9 +2,9 @@ package com.northcoders.recordshopAPI.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.northcoders.recordshopAPI.exception.AlbumAlreadyExistsException;
+import com.northcoders.recordshopAPI.exception.ConflictException;
 import com.northcoders.recordshopAPI.exception.AlbumNotFoundException;
+import com.northcoders.recordshopAPI.exception.BadRequestException;
 import com.northcoders.recordshopAPI.model.AlbumModel;
 import com.northcoders.recordshopAPI.model.Genre;
 import com.northcoders.recordshopAPI.repository.AlbumRepository;
@@ -70,7 +70,7 @@ public class AlbumServiceImpl implements AlbumService {
                             });
                 })
                 .onErrorMap(DataIntegrityViolationException.class,
-                        ex -> new AlbumAlreadyExistsException("Album already exists!"));
+                        ex -> new ConflictException("Album already exists!"));
     }
 
     @Override
@@ -127,9 +127,11 @@ public class AlbumServiceImpl implements AlbumService {
     public Mono<AlbumModel> updateAlbum(Long id, AlbumModel album) {
         String title = album.getTitle();
         String artist = album.getArtist();
+        Integer releasedYear = album.getReleasedYear();
+        Genre genre = album.getGenre();
 
-        if (title == null || artist == null) {
-            throw new NullPointerException("Title and artist cannot be null");
+        if (title == null || artist == null || releasedYear == null || genre == null) {
+            throw new BadRequestException("Missing album information");
         } else if (albumRepository.findById(id).isEmpty()) {
             throw new AlbumNotFoundException("Album with ID = " + id + " not found");
         }
@@ -145,7 +147,7 @@ public class AlbumServiceImpl implements AlbumService {
                             });
                 })
                 .onErrorMap(DataIntegrityViolationException.class,
-                        ex -> new AlbumAlreadyExistsException("Album already exists!"));
+                        ex -> new ConflictException("Album already exists!"));
     }
 
     @Override
@@ -182,7 +184,7 @@ public class AlbumServiceImpl implements AlbumService {
                                     cacheService.evictCacheValue("album", id);
                                 })
                                 .onErrorMap(DataIntegrityViolationException.class,
-                                        ex -> new AlbumAlreadyExistsException("Album already exists!"));
+                                        ex -> new ConflictException("Album already exists!"));
                     } else {
                         throw new AlbumNotFoundException("Album with ID " + id + " not found");
                     }
