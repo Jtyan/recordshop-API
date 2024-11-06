@@ -4,7 +4,6 @@ import com.northcoders.recordshopAPI.model.AlbumModel;
 import com.northcoders.recordshopAPI.model.Genre;
 import com.northcoders.recordshopAPI.service.AlbumService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.reactive.config.EnableWebFlux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -79,13 +77,13 @@ class AlbumControllerTest {
 
     @Test
     void getAllAlbumsInStock() throws Exception {
-        List<AlbumModel> AlbumListInStock = new ArrayList<>();
+        List<AlbumModel> albumListInStock = new ArrayList<>();
         for (AlbumModel album : mockAlbumList) {
             if (album.getStock() != null && album.getStock() > 0) {
-                AlbumListInStock.add(album);
+                albumListInStock.add(album);
             }
         }
-        when(mockAlbumService.getAllAlbumsInStock()).thenReturn(AlbumListInStock);
+        when(mockAlbumService.getAllAlbumsInStock()).thenReturn(albumListInStock);
 
         mockMvc.perform(get(URI + "/album?inStock=true").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -105,13 +103,13 @@ class AlbumControllerTest {
 
     @Test
     void getAlbumsByArtist() throws Exception {
-        List<AlbumModel> AlbumListByArtist = new ArrayList<>();
+        List<AlbumModel> albumListByArtist = new ArrayList<>();
         for (AlbumModel album : mockAlbumList) {
             if (album.getArtist() == "The Beatles") {
-                AlbumListByArtist.add(album);
+                albumListByArtist.add(album);
             }
         }
-        when(mockAlbumService.getAllAlbumsByArtist("The Beatles")).thenReturn(AlbumListByArtist);
+        when(mockAlbumService.getAllAlbumsByArtist("The Beatles")).thenReturn(albumListByArtist);
 
         mockMvc.perform(get(URI + "/album?artist=The Beatles").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -120,13 +118,13 @@ class AlbumControllerTest {
 
     @Test
     void getAlbumsByReleasedYear() throws Exception {
-        List<AlbumModel> AlbumListByReleasedYear = new ArrayList<>();
+        List<AlbumModel> albumListByReleasedYear = new ArrayList<>();
         for (AlbumModel album : mockAlbumList) {
             if (album.getReleasedYear() == 1969) {
-                AlbumListByReleasedYear.add(album);
+                albumListByReleasedYear.add(album);
             }
         }
-        when(mockAlbumService.getAllAlbumsByReleasedYear(1969)).thenReturn(AlbumListByReleasedYear);
+        when(mockAlbumService.getAllAlbumsByReleasedYear(1969)).thenReturn(albumListByReleasedYear);
         mockMvc.perform(get(URI + "/album?releasedYear=1969").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].releasedYear").value(1969));
@@ -155,4 +153,86 @@ class AlbumControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$[0].genre").value("ROCK"));
     }
 
+    @Test
+    void addAlbum() throws Exception {
+        AlbumModel album = new AlbumModel(20L, "21", "Adele", 2011, Genre.POP, 20, "");
+        given(mockAlbumService.saveAlbum(any(AlbumModel.class))).willReturn(Mono.just(album));
+
+        MvcResult result = mockMvc.perform(post(URI + "/album")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "21",
+                                    "artist": "Adele",
+                                    "releasedYear": 2011,
+                                    "genre": "POP",
+                                    "stock": 20
+                                }"""))
+                .andExpect(MockMvcResultMatchers.request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("21"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.artist").value("Adele"));
+    }
+
+    @Test
+    void updateAlbum() throws Exception {
+        AlbumModel newAlbum = new AlbumModel(1L, "21", "Adele", 2011, Genre.POP, 20, "");
+
+        given(mockAlbumService.updateAlbum(any(Long.class), any(AlbumModel.class))).willReturn(Mono.just(newAlbum));
+
+        MvcResult result = mockMvc.perform(put(URI + "/album/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "21",
+                                    "artist": "Adele",
+                                    "releasedYear": 2011,
+                                    "genre": "POP",
+                                    "stock": 20
+                                }"""))
+                .andExpect(MockMvcResultMatchers.request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("21"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.artist").value("Adele"));
+    }
+
+    @Test
+    void partiallyUpdateAlbum() throws Exception {
+        AlbumModel newAlbum = new AlbumModel(1L, "21", "Adele", 2011, Genre.POP, 20, "");
+
+        given(mockAlbumService.updateAlbum(any(Long.class), any(AlbumModel.class))).willReturn(Mono.just(newAlbum));
+
+        MvcResult result = mockMvc.perform(put(URI + "/album/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "21",
+                                    "artist": "Adele",
+                                    "releasedYear": 2011,
+                                    "genre": "POP",
+                                    "stock": 20
+                                }"""))
+                .andExpect(MockMvcResultMatchers.request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("21"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.artist").value("Adele"));
+    }
+
+    @Test
+    void deleteAlbumById() throws Exception {
+        when(mockAlbumService.deleteAlbumById(2L)).thenReturn("Album successfully deleted");
+
+        mockMvc.perform(delete(URI + "/album/2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isAccepted())
+                .andExpect(MockMvcResultMatchers.content().string("Album successfully deleted"));
+    }
 }

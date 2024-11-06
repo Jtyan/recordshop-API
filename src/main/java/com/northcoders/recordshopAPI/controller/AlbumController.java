@@ -65,15 +65,13 @@ public class AlbumController {
     }
 
     @PutMapping("/album/{id}")
-    public ResponseEntity<Mono<AlbumModel>> updateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
-        Mono<AlbumModel> updatedAlbum = albumService.updateAlbum(id, album);
-        return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
+    public Mono<ResponseEntity<AlbumModel>> updateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
+        return albumService.updateAlbum(id, album).map(updatedAlbum -> ResponseEntity.status(HttpStatus.OK).body(updatedAlbum));
     }
 
     @PatchMapping("/album/{id}")
-    public ResponseEntity<Mono<AlbumModel>> partiallyUpdateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
-        Mono<AlbumModel> updatedAlbum = albumService.partiallyUpdateAlbum(id, album);
-        return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
+    public Mono<ResponseEntity<AlbumModel>> partiallyUpdateAlbum(@PathVariable("id") Long id, @RequestBody AlbumModel album) {
+        return albumService.partiallyUpdateAlbum(id, album).map(updatedAlbum -> ResponseEntity.status(HttpStatus.OK).body(updatedAlbum));
     }
 
     @DeleteMapping("/album/{id}")
