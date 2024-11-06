@@ -58,12 +58,38 @@ class AlbumControllerTest {
     @Test
     void getAllAlbums() throws Exception{
         when(mockAlbumService.getAllAlbums()).thenReturn(mockAlbumList);
-        when(mockAlbumService.getAllAlbumsInStock()).thenReturn(mockAlbumList);
+
 
         mockMvc.perform(get(URI + "/album").contentType(MediaType.APPLICATION_JSON))
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(1L))
             .andExpect(MockMvcResultMatchers.jsonPath("$[0].title").value("Abbey Road"))
             .andExpect(MockMvcResultMatchers.jsonPath("$[0].releasedYear").value(1969));
+    }
+
+    @Test
+    void getAllAlbumsInStock() throws Exception{
+        List<AlbumModel> AlbumListInStock = new ArrayList<>();
+        for (AlbumModel album : mockAlbumList) {
+            if (album.getStock() != null && album.getStock() > 0) {
+                AlbumListInStock.add(album);
+            }
+        }
+        when(mockAlbumService.getAllAlbumsInStock()).thenReturn(AlbumListInStock);
+
+        mockMvc.perform(get(URI +"/album?inStock=true").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[3].id").value(5L))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[3].title").value("Blue"));
+    }
+
+    @Test
+    void getAlbumById() throws Exception{
+        when(mockAlbumService.getAlbumById(2L)).thenReturn(mockAlbumList.get(1));
+
+        mockMvc.perform(get(URI + "/album/2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(2L))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("Thriller"));
     }
 }
